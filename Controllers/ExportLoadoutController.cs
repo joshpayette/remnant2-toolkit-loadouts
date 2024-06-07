@@ -14,6 +14,12 @@ public class ExportLoadoutController : Controller
     [HttpPost]
     public IActionResult Process([FromForm] FormData data)
     {
+        var authorizationToken = Environment.GetEnvironmentVariable("AUTHORIZATION_TOKEN");
+        if (data.authToken != authorizationToken)
+        {
+            return BadRequest();
+        }
+
         using MemoryStream memoryStream = new();
         data.saveFile.OpenReadStream().CopyTo(memoryStream);
         SaveFile sf = SaveFile.Read(memoryStream.ToArray());
