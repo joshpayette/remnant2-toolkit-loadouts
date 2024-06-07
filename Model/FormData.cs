@@ -2,5 +2,5 @@
 
 public class FormData
 {
-    public IFormFile Profile { get; set; }
+    public IFormFile saveFile { get; set; }
 }
