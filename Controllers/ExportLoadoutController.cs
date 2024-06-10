@@ -20,14 +20,28 @@ public class ExportLoadoutController : Controller
             return BadRequest();
         }
 
+        var requestedCharacterSlot = data.characterSlot != null ? int.Parse(data.characterSlot) : 1;
+
         using MemoryStream memoryStream = new();
         data.saveFile.OpenReadStream().CopyTo(memoryStream);
         SaveFile sf = SaveFile.Read(memoryStream.ToArray());
+
         List<Character> result = [];
+
         Navigator navigator = new(sf);
         var profileCharacters = navigator.GetObjects("SavedCharacter");
+
+        var characterIndex = 0;
         foreach (var profileCharacter in profileCharacters)
         {
+            characterIndex++;
+
+            // Ensure we only get the loadouts for the requested character
+            if (characterIndex != requestedCharacterSlot)
+            {
+                continue;
+            }
+
             Character character = new();
             result.Add(character);
             Property profileLoadoutRecords = navigator.GetProperty("LoadoutRecords", profileCharacter);
