@@ -31,42 +31,49 @@ public class ExportLoadoutController : Controller
         Navigator navigator = new(sf);
         var profileCharacters = navigator.GetObjects("SavedCharacter");
 
-        var characterIndex = 0;
-        foreach (var profileCharacter in profileCharacters)
+        try
         {
-            characterIndex++;
-
-            // Ensure we only get the loadouts for the requested character
-            if (characterIndex != requestedCharacterSlot)
+            var characterIndex = 0;
+            foreach (var profileCharacter in profileCharacters)
             {
-                continue;
-            }
+                characterIndex++;
 
-            Character character = new();
-            result.Add(character);
-            Property profileLoadoutRecords = navigator.GetProperty("LoadoutRecords", profileCharacter);
-            if (profileLoadoutRecords != null)
-            {
-                character.Loadouts = [];
-                List<Property> loadoutEntries = navigator.GetProperties("Entries", profileLoadoutRecords);
-                foreach (var loadoutEntry in loadoutEntries)
+                // Ensure we only get the loadouts for the requested character
+                if (characterIndex != requestedCharacterSlot)
                 {
-                    List<LoadoutRecord> loadout = [];
-                    character.Loadouts.Add(loadout);
-                    ArrayStructProperty asp = loadoutEntry.Get<ArrayStructProperty>();
-                    foreach (object aspItem in asp.Items)
+                    continue;
+                }
+
+                Character character = new();
+                result.Add(character);
+                Property profileLoadoutRecords = navigator.GetProperty("LoadoutRecords", profileCharacter);
+                if (profileLoadoutRecords != null)
+                {
+                    character.Loadouts = [];
+                    List<Property> loadoutEntries = navigator.GetProperties("Entries", profileLoadoutRecords);
+                    foreach (var loadoutEntry in loadoutEntries)
                     {
-                        PropertyBag pb = (PropertyBag)aspItem!;
-                        loadout.Add(new()
+                        List<LoadoutRecord> loadout = [];
+                        character.Loadouts.Add(loadout);
+                        ArrayStructProperty asp = loadoutEntry.Get<ArrayStructProperty>();
+                        foreach (object aspItem in asp.Items)
                         {
-                            Id = pb["ItemClass"].Get<string>(),
-                            Level = pb["Level"].Get<int>(),
-                            Type = pb["Slot"].Get<ObjectProperty>().ClassName!
-                        });
+                            PropertyBag pb = (PropertyBag)aspItem!;
+                            loadout.Add(new()
+                            {
+                                Id = pb["ItemClass"].Get<string>(),
+                                Level = pb["Level"].Get<int>(),
+                                Type = pb["Slot"].Get<ObjectProperty>().ClassName!
+                            });
+                        }
                     }
                 }
             }
+            return new JsonResult(result);
         }
-        return new JsonResult(result);
+        catch (Exception e)
+        {
+            return BadRequest();
+        }
     }
 }
